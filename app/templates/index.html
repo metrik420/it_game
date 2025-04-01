@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IT Professional Simulation Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>IT Professional Simulation Game</h1>
+    <div id="player-progress" class="mb-3">
+      <h3>Player Progress</h3>
+      <p id="progress-text">Level: {{ game.level }} | XP: {{ game.xp }}</p>
+      <div class="progress">
+        <div id="xp-bar" class="progress-bar" role="progressbar" style="width: {{ (game.xp % 50) * 2 }}%;" aria-valuenow="{{ game.xp % 50 }}" aria-valuemin="0" aria-valuemax="50"></div>
+      </div>
+    </div>
+    <div id="task-queue" class="mb-3">
+      <h3>Task Queue</h3>
+      <ul id="task-list" class="list-group">
+        {% for task_id, task in game.tasks.items() %}
+          <li class="list-group-item d-flex justify-content-between align-items-center {% if task.escalated %}list-group-item-danger{% endif %}" data-task-id="{{ task_id }}">
+            {{ task.description }}
+            {% if task.completed %}
+              <span class="badge bg-success">Completed</span>
+            {% else %}
+              <button class="btn btn-primary btn-sm complete-task-btn" data-task-id="{{ task_id }}">Complete</button>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="mb-3">
+      <button id="save-game" class="btn btn-success">Save Game</button>
+      <button id="load-game" class="btn btn-warning">Load Game</button>
+    </div>
+    <div class="mb-3">
+      <h3>Tools</h3>
+      <button class="btn btn-secondary tool-btn" data-tool="password_reset">Password Reset</button>
+      <button class="btn btn-secondary tool-btn" data-tool="dns_editor">DNS Editor</button>
+      <button class="btn btn-secondary tool-btn" data-tool="malware_scanner">Malware Scanner</button>
+      <button class="btn btn-secondary tool-btn" data-tool="firewall_console">Firewall Console</button>
+      <button class="btn btn-secondary tool-btn" data-tool="ddos_mitigator">DDoS Mitigator</button>
+      <button class="btn btn-secondary tool-btn" data-tool="backup_restore">Backup/Restore</button>
+      <button class="btn btn-secondary tool-btn" data-tool="terminal_emulator">Terminal Emulator</button>
+    </div>
+    <div id="flash-messages">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="alert alert-info" role="alert">
+            {% for message in messages %}
+              <p>{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function updateGameState() {
+      $.ajax({
+        url: '/game_state',
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          // Update player progress
+          $('#progress-text').text('Level: ' + data.level + ' | XP: ' + data.xp);
+          $('#xp-bar').css('width', ((data.xp % 50) * 2) + '%');
+
+          // Update task list
+          var taskList = $('#task-list');
+          taskList.empty();
+          $.each(data.tasks, function(task_id, task) {
+            var liClass = 'list-group-item d-flex justify-content-between align-items-center';
+            if (task.escalated) liClass += ' list-group-item-danger';
+            var listItem = $('<li></li>').addClass(liClass).attr('data-task-id', task_id);
+            listItem.text(task.description);
+            if (task.completed) {
+              listItem.append(' <span class="badge bg-success">Completed</span>');
+            } else {
+              var completeBtn = $('<button>Complete</button>').addClass('btn btn-primary btn-sm complete-task-btn').attr('data-task-id', task_id);
+              listItem.append(completeBtn);
+            }
+            taskList.append(listItem);
+          });
+        },
+        error: function() {
+          console.error('Failed to fetch game state.');
+        }
+      });
+    }
+
+    $(document).ready(function(){
+      // Poll for game state updates every 10 seconds
+      setInterval(updateGameState, 10000);
+
+      // Handle task completion
+      $(document).on('click', '.complete-task-btn', function(){
+        var task_id = $(this).data('task-id');
+        $.post('/complete_task', { task_id: task_id }, function(){
+          updateGameState();
+        });
+      });
+
+      // Save game
+      $('#save-game').click(function(){
+        $.post('/save', function(){
+          alert('Game saved successfully.');
+          updateGameState();
+        });
+      });
+
+      // Load game
+      $('#load-game').click(function(){
+        $.post('/load', function(){
+          alert('Game loaded successfully.');
+          updateGameState();
+        });
+      });
+
+      // Run tools
+      $('.tool-btn').click(function(){
+        var toolName = $(this).data('tool');
+        $.ajax({
+          url: '/tool/' + toolName,
+          method: 'GET',
+          dataType: 'json',
+          success: function(data) {
+            if (data.result) {
+              alert(data.result);
+            } else {
+              alert("Error: " + data.error);
+            }
+          },
+          error: function(){
+            alert("Error running tool " + toolName);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
