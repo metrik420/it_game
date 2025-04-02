@@ -1,6 +1,21 @@
-<div class="modal fade" id="backupModal" tabindex="-1" aria-labelledby="backupModalLabel" aria-hidden="true">
-  <div class="modal-dialog"><div class="modal-content"><div class="modal-header">
-    <h5 class="modal-title" id="backupModalLabel">Backup / Restore</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-  </div><div class="modal-body">Placeholder for Backup/Restore</div></div></div>
+<div class="modal fade" id="backupRestoreModal" tabindex="-1" aria-labelledby="backupModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('main.backup_restore_tool') }}" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="backupModalLabel">💾 Backup / Restore Tool</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-muted">Enter the username of the customer to restore or back up their environment.</p>
+        <div class="mb-3">
+          <input type="text" class="form-control" name="username" placeholder="Enter username" required>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-dark">Run Backup / Restore</button>
+      </div>
+    </form>
+  </div>
 </div>

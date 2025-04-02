@@ -1,6 +1,26 @@
 <div class="modal fade" id="terminalModal" tabindex="-1" aria-labelledby="terminalModalLabel" aria-hidden="true">
-  <div class="modal-dialog"><div class="modal-content"><div class="modal-header">
-    <h5 class="modal-title" id="terminalModalLabel">Terminal Emulator</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-  </div><div class="modal-body">Placeholder for Terminal Emulator</div></div></div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title" id="terminalModalLabel">🖥️ Terminal</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="border border-secondary p-2 bg-black" style="height: 300px; overflow-y: auto; font-family: monospace;" id="terminal-output">
+          Welcome to MetrikCorp IT Terminal<br>
+          Type 'help' to see available commands.<br><br>
+          $
+        </div>
+
+        <form id="terminal-form" class="mt-2">
+          <div class="input-group">
+            <span class="input-group-text bg-secondary text-white">$</span>
+            <input type="text" class="form-control bg-dark text-light border-secondary" id="terminal-input" placeholder="Enter command" autocomplete="off">
+            <button class="btn btn-secondary" type="submit">Run</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>

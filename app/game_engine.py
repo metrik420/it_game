@@ -1,98 +1,98 @@
 import random
 import string
+from datetime import datetime
 
 class GameEngine:
     def __init__(self):
-        self.level = 1
         self.xp = 0
-        self.tasks = {}
-        self.task_id_counter = 1
-        self.logs = []
-        self.tool_types = [
-            "Password Reset", "DNS Editor", "Malware Scanner",
-            "Firewall Console", "DDoS Mitigator", "Backup/Restore"
-        ]
-        self.first_names = ["Alice", "Bob", "Charlie", "Diana", "Ethan", "Fiona", "George", "Hannah"]
-        self.last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
-        self.companies = ["CyberX", "NetSecure", "CloudTech", "DataSafe", "Virtux", "ProxyFlare", "NeuroHost", "GridOps"]
-        self.generate_tasks()
-
-    def generate_username(self, first, last):
-        return f"{first[0].lower()}{last.lower()}"
-
-    def generate_task_notes(self, tool, username, hostname, ip, scan_path, restore_path):
-        return {
-            "Password Reset": f"User {username} is locked out and needs a password reset immediately.",
-            "DNS Editor": f"DNS record for {hostname} is incorrect and must be updated to IP {ip}.",
-            "Malware Scanner": f"The system at {scan_path} is acting strange. Perform a malware scan.",
-            "Firewall Console": f"User {username} reported blocked service. Adjust firewall to allow correct port.",
-            "DDoS Mitigator": f"{hostname} is under heavy traffic—check for signs of DDoS and mitigate.",
-            "Backup/Restore": f"Critical data loss on {hostname}. Restore from backup in {restore_path}."
-        }.get(tool, "No task notes provided.")
+        self.level = 1
+        self.log = []
+        self.tasks = self.generate_tasks()
 
     def generate_tasks(self):
-        self.tasks = {}
-        self.task_id_counter = 1
-        for _ in range(5):
-            first = random.choice(self.first_names)
-            last = random.choice(self.last_names)
-            company = random.choice(self.companies)
-            username = self.generate_username(first, last)
-            email = f"{username}@{company.lower()}.com"
-            ip = f"192.168.{random.randint(0, 255)}.{random.randint(1, 254)}"
-            hostname = f"{username}.{company.lower()}.com"
-            scan_path = f"/home/{username}/scan"
-            restore_path = f"/home/{username}/backup"
-            tool = random.choice(self.tool_types)
-            notes = self.generate_task_notes(tool, username, hostname, ip, scan_path, restore_path)
+        names = ["Alice", "Bob", "Charlie", "Diana", "Eve"]
+        companies = ["CyberCorp", "NetLogic", "HostHero", "SecureNet"]
+        ports_services = {"22": "SSH", "21": "FTP", "80": "HTTP", "443": "HTTPS", "3306": "MySQL"}
+        tasks = {}
 
-            task = {
-                "title": f"{tool} (T{self.tool_types.index(tool) + 1})",
-                "completed": False,
-                "tool_required": tool,
-                "account": {
-                    "name": f"{first} {last}",
-                    "email": email,
-                    "username": username,
-                    "company": company,
-                    "ip": ip,
-                    "hostname": hostname,
-                    "scan_path": scan_path,
-                    "restore_path": restore_path,
-                    "notes": notes
-                }
+        for i in range(1, 6):
+            full_name = random.choice(names) + " " + random.choice(["Smith", "Lee", "Johnson", "Nguyen"])
+            username = full_name.lower().replace(" ", ".")
+            domain = f"{username.split('.')[0]}.com"
+            hostname = f"{username.split('.')[0]}.{random.choice(['net', 'com', 'org'])}"
+            ip = f"192.168.{random.randint(0, 255)}.{random.randint(1, 254)}"
+            scan_path = f"/home/{username}/public_html"
+            restore_path = f"/backups/{username}/"
+            email = f"{username}@{domain}"
+            company = random.choice(companies)
+
+            tool = random.choice([
+                "Password Reset", "DNS Editor", "Malware Scanner",
+                "Firewall Console", "DDoS Mitigator", "Backup/Restore"
+            ])
+
+            account = {
+                "full_name": full_name,
+                "username": username,
+                "email": email,
+                "company": company,
+                "ip": ip,
+                "hostname": hostname,
+                "scan_path": scan_path,
+                "restore_path": restore_path
             }
-            self.tasks[f"task{self.task_id_counter}"] = task
-            self.task_id_counter += 1
+
+            if tool == "Firewall Console":
+                ports = random.sample(list(ports_services.keys()), k=random.randint(1, 2))
+                account["ports"] = ports
+                services = [ports_services[p] for p in ports]
+                account["notes"] = f"Please allow access for {' and '.join(services)} (ports {', '.join(ports)})."
+            elif tool == "DDoS Mitigator":
+                targets = [ip, hostname, domain]
+                account["targets"] = targets
+                account["notes"] = f"We're seeing a major spike on {random.choice(targets)}. Please mitigate immediately."
+            elif tool == "DNS Editor":
+                account["notes"] = f"Customer needs DNS updated for {hostname} to point to {ip}."
+            elif tool == "Malware Scanner":
+                account["notes"] = f"Scan the directory {scan_path} for malware."
+            elif tool == "Password Reset":
+                account["notes"] = f"Customer forgot their password. Reset login for {username}."
+            elif tool == "Backup/Restore":
+                account["notes"] = f"Customer needs files restored from backup path {restore_path}."
+
+            tasks[f"TASK-{i}"] = {
+                "name": tool,
+                "tool_required": tool,
+                "account": account,
+                "completed": False,
+                "level": random.randint(1, 3),
+                "xp": random.choice([10, 15, 20, 25])
+            }
+
+        return tasks
 
     def complete_task(self, task_id):
-        if task_id in self.tasks and not self.tasks[task_id]["completed"]:
+        if task_id in self.tasks:
             self.tasks[task_id]["completed"] = True
-            tool = self.tasks[task_id]["tool_required"]
-            xp_gain = (self.tool_types.index(tool) + 1) * 5 + 5
-            self.xp += xp_gain
-            if self.xp >= 100:
-                self.level += 1
-                self.xp = 0
+            self.xp += self.tasks[task_id]["xp"]
+            self.level = 1 + self.xp // 100
 
     def log_event(self, message):
-        self.logs.insert(0, f"[{self.current_time()}] {message}")
-        self.logs = self.logs[:10]
-
-    def current_time(self):
-        from datetime import datetime
-        return datetime.now().strftime("%H:%M:%S")
+        timestamp = datetime.now().strftime("[%H:%M:%S]")
+        self.log.append(f"{timestamp} {message}")
+        if len(self.log) > 100:
+            self.log.pop(0)
 
     def to_dict(self):
         return {
-            "level": self.level,
             "xp": self.xp,
-            "tasks": self.tasks,
-            "logs": self.logs
+            "level": self.level,
+            "log": self.log,
+            "tasks": self.tasks
         }
 
     def from_dict(self, data):
-        self.level = data.get("level", 1)
-        self.xp = data.get("xp", 0)
-        self.tasks = data.get("tasks", {})
-        self.logs = data.get("logs", [])
+        self.xp = data["xp"]
+        self.level = data["level"]
+        self.log = data["log"]
+        self.tasks = data["tasks"]

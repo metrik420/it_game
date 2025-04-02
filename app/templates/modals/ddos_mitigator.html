@@ -1,16 +1,18 @@
-<div class="modal fade" id="ddosModal" tabindex="-1" aria-labelledby="ddosModalLabel" aria-hidden="true">
+<div class="modal fade" id="ddosMitigatorModal" tabindex="-1" aria-labelledby="ddosMitigatorModal" aria-hidden="true">
   <div class="modal-dialog">
-    <form class="modal-content" method="POST" action="{{ url_for('main.ddos_mitigator_tool') }}">
+    <form method="POST" action="{{ url_for('main.ddos_mitigator_tool') }}" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="ddosModalLabel">DDoS Mitigator</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="ddosMitigatorModalLabel">🚨 DDoS Mitigator</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body">
+        <p class="text-muted">Enter the target domain or IP being attacked to trigger mitigation.</p>
         <div class="mb-3">
-          <label for="target" class="form-label">Target Domain/IP</label>
-          <input type="text" class="form-control" name="target" id="target" placeholder="e.g. api.example.com" required>
+          <input type="text" class="form-control" name="target" placeholder="Enter target domain or IP" required>
         </div>
       </div>
+
       <div class="modal-footer">
         <button type="submit" class="btn btn-danger">Mitigate Attack</button>
       </div>

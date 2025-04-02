@@ -1,81 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>IT Professional Simulation Game</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>IT Professional Simulation Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container py-4">
-    <h2>IT Professional Simulation Game</h2>
+  <h2>IT Professional Simulation Game</h2>
 
-    <h5>Player Progress</h5>
-    <p>Level: {{ game.level }} | XP: {{ game.xp }}</p>
-    <div class="progress mb-3">
-        <div class="progress-bar" role="progressbar" style="width: {{ game.xp }}%;" aria-valuenow="{{ game.xp }}" aria-valuemin="0" aria-valuemax="100"></div>
+  <h5>Player Progress</h5>
+  <p>Level: {{ game.level }} | XP: {{ game.xp }}</p>
+  <div class="progress mb-3">
+    <div class="progress-bar" role="progressbar" style="width: {{ game.xp }}%;" aria-valuenow="{{ game.xp }}" aria-valuemin="0" aria-valuemax="100"></div>
+  </div>
+
+  <div class="row">
+    <!-- Tasks -->
+    <div class="col-md-6">
+      <h5>🗂️ Active Tasks</h5>
+      {% for task_id, task in game.tasks.items() %}
+        {% if not task.completed %}
+          <div class="border rounded p-3 mb-3">
+            <strong>{{ task_id }} - {{ task.name }}</strong>
+            <span class="text-muted">XP: {{ task.xp }} | Level: {{ task.level }}</span>
+            <p><strong>User:</strong> {{ task.account.username }} ({{ task.account.full_name }})</p>
+            <p><strong>Email:</strong> {{ task.account.email }}</p>
+            <p><strong>Company:</strong> {{ task.account.company }}</p>
+            <p><strong>IP Address:</strong> {{ task.account.ip }}</p>
+            <p><strong>Hostname:</strong> {{ task.account.hostname }}</p>
+            <p><strong>Scan Path:</strong> {{ task.account.scan_path }}</p>
+            <p><strong>Restore Path:</strong> {{ task.account.restore_path }}</p>
+            {% if task.account.ports %}
+              <p><strong>Required Ports:</strong> {{ task.account.ports | join(', ') }}</p>
+            {% endif %}
+            <p><strong>Notes:</strong> {{ task.account.notes or '—' }}</p>
+            <form action="{{ url_for('main.complete_task') }}" method="post">
+              <button class="btn btn-success btn-sm">Mark Complete</button>
+            </form>
+          </div>
+        {% endif %}
+      {% endfor %}
     </div>
 
-    <div class="row">
-        <!-- Tasks -->
-        <div class="col-md-6">
-            <h5>🗂️ Active Tasks</h5>
-            {% for task_id, task in game.tasks.items() %}
-                {% if not task.completed %}
-                    <div class="border rounded p-3 mb-3">
-                        <strong>{{ task_id }} - {{ task.name }}</strong> <span class="text-muted">XP: {{ task.xp }} | Level: {{ task.level }}</span>
-                        <p><strong>User:</strong> {{ task.account.username }} ({{ task.account.full_name }})</p>
-                        <p><strong>Email:</strong> {{ task.account.email }}</p>
-                        <p><strong>Company:</strong> {{ task.account.company }}</p>
-                        <p><strong>IP Address:</strong> {{ task.account.ip }}</p>
-                        <p><strong>Hostname:</strong> {{ task.account.hostname }}</p>
-                        <p><strong>Scan Path:</strong> {{ task.account.scan_path }}</p>
-                        <p><strong>Restore Path:</strong> {{ task.account.restore_path }}</p>
-                        <p><strong>Notes:</strong> {{ task.account.notes or '—' }}</p>
-                        <form action="{{ url_for('main.complete_task') }}" method="post">
-                            <button class="btn btn-success btn-sm">Mark Complete</button>
-                        </form>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        </div>
+    <!-- System Log & Tools -->
+    <div class="col-md-6">
+      <h5>📜 System Log</h5>
+      <div class="border rounded p-3 mb-3 bg-light text-dark" style="height: 200px; overflow-y: auto;">
+        {% for entry in game.log %}
+          <div>{{ entry }}</div>
+        {% else %}
+          <div class="text-muted">No logs yet. Perform actions to generate log entries.</div>
+        {% endfor %}
+      </div>
 
-        <!-- System Log & Tools -->
-        <div class="col-md-6">
-            <h5>📜 System Log</h5>
-            <div class="border rounded p-3 mb-3" style="height: 150px; overflow-y: auto;">
-                {% for entry in game.log %}
-                    <div>{{ entry }}</div>
-                {% endfor %}
-            </div>
+      <h5>🛠️ Tools</h5>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#passwordResetModal">Password Reset</button>
+        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#dnsEditorModal">DNS Editor</button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#malwareScannerModal">Malware Scanner</button>
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#firewallConsoleModal">Firewall Console</button>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ddosMitigatorModal">DDoS Mitigator</button>
+        <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#backupRestoreModal">Backup/Restore</button>
+        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#terminalModal">Terminal</button>
+      </div>
 
-            <h5>🛠️ Tools</h5>
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#passwordResetModal">Password Reset</button>
-                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#dnsEditorModal">DNS Editor</button>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#malwareScannerModal">Malware Scanner</button>
-                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#firewallConsoleModal">Firewall Console</button>
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ddosMitigatorModal">DDoS Mitigator</button>
-                <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#backupRestoreModal">Backup/Restore</button>
-                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#terminalModal">Terminal</button>
-            </div>
-
-            <form action="{{ url_for('main.save') }}" method="post" class="d-inline">
-                <button class="btn btn-outline-primary">💾 Save Game</button>
-            </form>
-            <form action="{{ url_for('main.load') }}" method="post" class="d-inline">
-                <button class="btn btn-outline-warning">📂 Load Game</button>
-            </form>
-        </div>
+      <form action="{{ url_for('main.save') }}" method="post" class="d-inline">
+        <button class="btn btn-outline-primary">💾 Save Game</button>
+      </form>
+      <form action="{{ url_for('main.load') }}" method="post" class="d-inline">
+        <button class="btn btn-outline-warning">📂 Load Game</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Modals for tools (keep as-is or update next) -->
-    {% include 'modals/password_reset.html' %}
-    {% include 'modals/dns_editor.html' %}
-    {% include 'modals/malware_scanner.html' %}
-    {% include 'modals/firewall_console.html' %}
-    {% include 'modals/ddos_mitigator.html' %}
-    {% include 'modals/backup_restore.html' %}
-    {% include 'modals/terminal.html' %}
+  <!-- Modals -->
+  {% include 'modals/password_reset.html' %}
+  {% include 'modals/dns_editor.html' %}
+  {% include 'modals/malware_scanner.html' %}
+  {% include 'modals/firewall_console.html' %}
+  {% include 'modals/ddos_mitigator.html' %}
+  {% include 'modals/backup_restore.html' %}
+  {% include 'modals/terminal.html' %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

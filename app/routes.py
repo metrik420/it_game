@@ -30,27 +30,37 @@ def load():
         flash('Failed to load game.')
     return redirect(url_for('main.index'))
 
-@bp.route('/tool/<tool_name>', methods=['GET'])
-def run_tool(tool_name):
-    try:
-        tool_module = __import__(f"app.tools.{tool_name}", fromlist=['run_tool'])
-        result = tool_module.run_tool()
-        return jsonify({"result": result})
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-def verify_and_complete_task(tool_name, field_name, user_input, xp_reward):
+def verify_and_complete_task(tool_name, field_name, user_input, xp_reward, extra_match=None):
     user_input = user_input.strip().strip("'\"").lower()
     matched = False
+
     for task_id, task in game.tasks.items():
         if not task["completed"] and task["tool_required"] == tool_name:
-            task_value = task["account"].get(field_name, "").strip().lower()
-            if user_input == task_value:
-                game.complete_task(task_id)
-                game.log_event(f"✅ {tool_name} success for {user_input} (task: {task_id})")
-                flash(f"{tool_name} completed for {user_input}!", "success")
-                matched = True
-                break
+            target_val = str(task["account"].get(field_name, "")).strip().lower()
+
+            if tool_name == "Firewall Console":
+                if user_input in task["account"].get("ports", []):
+                    game.complete_task(task_id)
+                    game.log_event(f"✅ Firewall rule applied for port {user_input} (task: {task_id})")
+                    flash(f"Firewall rule applied for port {user_input}!", "success")
+                    matched = True
+                    break
+            elif tool_name == "DDoS Mitigator":
+                valid_targets = task["account"].get("targets", [])
+                if user_input in [t.lower() for t in valid_targets]:
+                    game.complete_task(task_id)
+                    game.log_event(f"✅ DDoS mitigated for {user_input} (task: {task_id})")
+                    flash(f"DDoS mitigation successful for {user_input}!", "success")
+                    matched = True
+                    break
+            else:
+                if user_input == target_val:
+                    game.complete_task(task_id)
+                    game.log_event(f"✅ {tool_name} success for {user_input} (task: {task_id})")
+                    flash(f"{tool_name} completed for {user_input}!", "success")
+                    matched = True
+                    break
+
     if not matched:
         game.log_event(f"❌ {tool_name} failed - bad input '{user_input}'")
         game.xp = max(0, game.xp - 5)
@@ -59,28 +69,26 @@ def verify_and_complete_task(tool_name, field_name, user_input, xp_reward):
 @bp.route('/tool/password_reset', methods=['POST'])
 def password_reset_tool():
     username = request.form.get('username')
-    if not username:
-        flash("Username is required.", "danger")
-    else:
+    if username:
         from app.tools import password_reset
         password_reset.run_tool()
         verify_and_complete_task("Password Reset", "username", username, 10)
+    else:
+        flash("Username is required.", "danger")
     return redirect(url_for('main.index'))
 
 @bp.route('/tool/dns_editor', methods=['POST'])
 def dns_editor_tool():
-    hostname = request.form.get('hostname', '').strip().strip("'\"").lower()
-    ip_address = request.form.get('ip_address', '').strip().strip("'\"")
+    hostname = request.form.get('hostname', '').strip().lower()
+    ip_address = request.form.get('ip_address', '').strip()
 
     matched = False
     for task_id, task in game.tasks.items():
         if not task["completed"] and task["tool_required"] == "DNS Editor":
-            expected_hostname = task["account"].get("hostname", "").strip().lower()
-            expected_ip = task["account"].get("ip", "").strip()
-            if hostname == expected_hostname and ip_address == expected_ip:
+            if hostname == task["account"].get("hostname", "").lower() and ip_address == task["account"].get("ip", ""):
                 game.complete_task(task_id)
                 game.log_event(f"✅ DNS updated for {hostname} (task: {task_id})")
-                flash(f"DNS settings updated for {hostname}!", "success")
+                flash(f"DNS updated for {hostname}!", "success")
                 matched = True
                 break
     if not matched:
@@ -93,46 +101,46 @@ def dns_editor_tool():
 @bp.route('/tool/malware_scanner', methods=['POST'])
 def malware_scanner_tool():
     scan_path = request.form.get('scan_path')
-    if not scan_path:
-        flash("Scan path required.", "danger")
-    else:
+    if scan_path:
         from app.tools import malware_scanner
         malware_scanner.run_tool()
         verify_and_complete_task("Malware Scanner", "scan_path", scan_path, 20)
+    else:
+        flash("Scan path required.", "danger")
     return redirect(url_for('main.index'))
 
 @bp.route('/tool/firewall_console', methods=['POST'])
 def firewall_console_tool():
     port = request.form.get('port')
     action = request.form.get('action')
-    if not port or not action:
-        flash("Port and action are required.", "danger")
-    else:
+    if port and action:
         from app.tools import firewall_console
         firewall_console.run_tool()
         verify_and_complete_task("Firewall Console", "port", port, 25)
+    else:
+        flash("Port and action are required.", "danger")
     return redirect(url_for('main.index'))
 
 @bp.route('/tool/ddos_mitigator', methods=['POST'])
 def ddos_mitigator_tool():
     target = request.form.get('target')
-    if not target:
-        flash("Target is required.", "danger")
-    else:
+    if target:
         from app.tools import ddos_mitigator
         ddos_mitigator.run_tool()
         verify_and_complete_task("DDoS Mitigator", "target", target, 30)
+    else:
+        flash("Target is required.", "danger")
     return redirect(url_for('main.index'))
 
 @bp.route('/tool/backup_restore', methods=['POST'])
 def backup_restore_tool():
     target_user = request.form.get('username')
-    if not target_user:
-        flash("Username is required for backup/restore.", "danger")
-    else:
+    if target_user:
         from app.tools import backup_restore
         backup_restore.run_tool()
         verify_and_complete_task("Backup/Restore", "username", target_user, 35)
+    else:
+        flash("Username is required.", "danger")
     return redirect(url_for('main.index'))
 
 @bp.route('/game_state', methods=['GET'])
