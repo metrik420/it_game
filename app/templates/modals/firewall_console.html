@@ -1,0 +1,30 @@
+<div class="modal fade" id="firewallModal" tabindex="-1" aria-labelledby="firewallModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="POST" action="{{ url_for('main.firewall_console_tool') }}">
+      <div class="modal-header">
+        <h5 class="modal-title" id="firewallModalLabel">Firewall Console</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="port" class="form-label">Port</label>
+          <input type="number" class="form-control" name="port" id="port" placeholder="e.g. 22" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Action</label><br>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="action" id="allow" value="allow" checked>
+            <label class="form-check-label" for="allow">Allow</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="action" id="deny" value="deny">
+            <label class="form-check-label" for="deny">Deny</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-warning">Apply Rule</button>
+      </div>
+    </form>
+  </div>
+</div>
